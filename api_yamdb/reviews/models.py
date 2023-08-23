@@ -1,4 +1,17 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+USER = 'user'
+
+
+ROLES = [
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
+    (USER, 'Пользователь')   
+]
 
 
 class Category(models.Model):
@@ -78,3 +91,47 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class User(AbstractUser):
+    '''Переопределяем модель User'''
+    username = models.CharField(
+        max_length=150,
+        verbose_name='Пользователь',
+        unique=True,
+        blank=False,
+    )
+    email = models.EmailField(
+        max_length=254,
+        verbose_name='Эл.почта',
+        unique=True,
+        blank=False
+    )
+    first_name = models.CharField(
+        max_length=150,
+        verbose_name='Имя',
+        null=True,
+        blank=True
+    )
+    last_name = models.CharField(
+        max_length=150,
+        verbose_name='Фамилия',
+        null=True,
+        blank=True
+    )
+    bio = models.TextField(
+        verbose_name='Биография',
+        blank=True,
+        null=True
+    )
+    role = models.CharField(
+        max_length=100,
+        verbose_name='Роль',
+        choices=ROLES,
+        default='user'
+    )
+
+    class Meta:
+        ordering = ('username',)
+        verbose_name = 'Пользователь',
+        verbose_name_plural = 'Пользователи'
