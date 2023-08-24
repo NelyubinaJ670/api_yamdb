@@ -10,7 +10,7 @@ USER = 'user'
 ROLES = [
     (MODERATOR, 'Модератор'),
     (ADMIN, 'Администратор'),
-    (USER, 'Пользователь')   
+    (USER, 'Пользователь')
 ]
 
 
@@ -135,3 +135,14 @@ class User(AbstractUser):
         ordering = ('username',)
         verbose_name = 'Пользователь',
         verbose_name_plural = 'Пользователи'
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        return (
+            self.role == ADMIN
+            or self.is_superuser
+        )
