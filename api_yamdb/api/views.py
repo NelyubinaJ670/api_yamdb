@@ -36,7 +36,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     '''
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrReadOnly, IsAuthenticatedOrReadOnly)
+    # permission_classes = (IsAdminOrReadOnly, IsAuthenticatedOrReadOnly)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', 'year',)
 

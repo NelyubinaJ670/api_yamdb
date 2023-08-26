@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from django.core.validators import (RegexValidator)
+
 
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -13,6 +15,11 @@ ROLES = [
     (USER, 'Пользователь')
 ]
 
+SLUG_VALIDATOR = RegexValidator(
+    regex=r'^[-a-zA-Z0-9_]+$',
+    message='Поле содержит недопустимый символ'
+)
+
 
 class Category(models.Model):
     '''Категории (типы) произведений'''
@@ -23,8 +30,8 @@ class Category(models.Model):
     slug = models.SlugField(
         'URL-идентификатор',
         max_length=50,
-        unique=True
-        # ^[-a-zA-Z0-9_]+$ разобраться как это сделать 
+        unique=True,
+        validators=[SLUG_VALIDATOR]
     )
     class Meta:
         verbose_name = 'Категория'
@@ -44,8 +51,8 @@ class Genre(models.Model):
     slug = models.SlugField(
         'URL-идентификатор',
         max_length=50,
-        unique=True
-        # ^[-a-zA-Z0-9_]+$ разобраться как это сделать 
+        unique=True,
+        validators=[SLUG_VALIDATOR]
     )
     class Meta:
         verbose_name = 'Жанр'
@@ -67,6 +74,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         'Год выпуска',
+        # validators=Валдатор?! Посмотрим что скажут тесты
     )
     description = models.TextField(
         'Описание',
@@ -76,7 +84,8 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        verbose_name='Жанр'
+        verbose_name='Жанр',
+        through='TitleGenre'
     )
     category = models.ForeignKey(
         Category,
@@ -91,6 +100,24 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TitleGenre(models.Model):
+    """Промежуточная класс, связывает жанры и произведения."""
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
+    )
+    class Meta:
+        rdering = ('id',)
+
+    def __str__(self):
+        return f'{self.title} принадлежит жанру/ам {self.genre}'
 
 
 class User(AbstractUser):
