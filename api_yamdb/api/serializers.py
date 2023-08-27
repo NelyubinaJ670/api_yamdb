@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from reviews.models import Title, Genre, Category, User, Review, Comment
+from rest_framework.validators import UniqueValidator
+
+from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -37,6 +40,10 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
+        validators=[
+            validate_username,
+            UniqueValidator(queryset=User.objects.all()),
+        ]
     )
 
     class Meta:
@@ -49,12 +56,14 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role',
         )
+        lookup_field = 'username'
 
 
 class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
+        validators=[validate_username]
     )
     confirmation_code = serializers.CharField(required=True)
 
@@ -62,6 +71,7 @@ class GetTokenSerializer(serializers.Serializer):
 class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
+        validators=[validate_username]
     )
     email = serializers.EmailField(
         max_length=254

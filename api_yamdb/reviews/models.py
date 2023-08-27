@@ -1,9 +1,9 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
+from django.db import models
 
-from django.core.validators import (RegexValidator)
-
+from reviews.validators import validate_username
 
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -117,6 +117,7 @@ class TitleGenre(models.Model):
         Title,
         on_delete=models.CASCADE
     )
+
     class Meta:
         ordering = ('id',)
 
@@ -131,12 +132,13 @@ class User(AbstractUser):
         verbose_name='Пользователь',
         unique=True,
         blank=False,
+        validators=[validate_username]
     )
     email = models.EmailField(
         max_length=254,
         verbose_name='Эл.почта',
         unique=True,
-        blank=False
+        blank=False,
     )
     first_name = models.CharField(
         max_length=150,
