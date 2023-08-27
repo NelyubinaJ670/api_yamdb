@@ -1,4 +1,4 @@
-from api.permissions import IsAdmin, IsAuthorModerAdminOrReadOnly
+from api.permissions import IsAdmin, IsAuthorModerAdminOrReadOnly, AdminOrReadOnly
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -10,7 +10,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
-
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -26,6 +25,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     '''
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (AdminOrReadOnly,)
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
@@ -35,6 +35,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     '''
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (AdminOrReadOnly,)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -44,8 +45,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     '''
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    # permission_classes = (IsAdminOrReadOnly, IsAuthenticatedOrReadOnly)
-    filter_backends = (filters.SearchFilter,)
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = ('name', 'year',)
 
 
