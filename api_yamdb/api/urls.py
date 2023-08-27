@@ -9,8 +9,7 @@ from .views import (
     ReviewViewSet,
     CommentViewSet,
     signup_user,
-    get_token
-)
+    get_token)
 
 
 app_name = 'api'
@@ -30,11 +29,14 @@ router.register(
     CommentViewSet,
     basename='comments',
 )
+
+
 auth_patterns = [
     path('signup/', signup_user),
     path('token/', get_token),
 ]
-url_patterns = [
+
+urlpatterns = [
     path('auth/', include(auth_patterns)),
     path('', include(router.urls)),
 ]

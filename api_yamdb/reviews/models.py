@@ -118,7 +118,7 @@ class TitleGenre(models.Model):
         on_delete=models.CASCADE
     )
     class Meta:
-        rdering = ('id',)
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.title} принадлежит жанру/ам {self.genre}'
