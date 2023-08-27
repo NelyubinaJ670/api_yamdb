@@ -1,16 +1,25 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Title, User
-from django.core.mail import send_mail
 
-from .serializers import (CategorySerializer, GenreSerializer,
-                          GetTokenSerializer, SignUpSerializer,
-                          TitleSerializer)
+from api.permissions import IsAdmin, IsAuthorModerAdminOrReadOnly
+from reviews.models import Category, Genre, Title, User, Review
+from .serializers import (
+  CategorySerializer, 
+  GenreSerializer, 
+  TitleSerializer,
+  GetTokenSerializer, 
+  SignUpSerializer, 
+  UserSerializer,
+  CommentSerializer,
+  ReviewCreateSerializer,
+  ReviewSerializer)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -29,6 +38,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     '''Вьюсет для Произведений. Читать может любой пользователь'''
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    '''Вьюсет для Пользователя. Доступ только у администратора'''
+    queryset = User.objects.all()
+    permission_classes = (IsAdmin,)
+    serializer_class = UserSerializer
 
 
 @api_view(['POST'])
@@ -85,3 +101,48 @@ def get_token(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Отображение действий с отзывами"""
+    serializer_class = ReviewSerializer
+    permission_classes = IsAuthorModerAdminOrReadOnly
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ReviewCreateSerializer
+        return ReviewSerializer
+
+    def get_queryset(self):
+        title = get_object_or_404(
+            Title, id=self.kwargs.get('title_id')
+        )
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(
+            Title, id=self.kwargs.get('title_id')
+        )
+        serializer.save(title=title, author=self.request.user)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Отображение действий с комментариями"""
+    serializer_class = CommentSerializer
+    permission_classes = IsAuthorModerAdminOrReadOnly
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id'),
+        )
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title_id=self.kwargs.get('title_id'),
+        )
+        serializer.save(review=review, author=self.request.user)
