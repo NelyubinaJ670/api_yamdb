@@ -2,11 +2,12 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+
 
 from api.permissions import IsAdmin, IsAuthorModerAdminOrReadOnly
 from reviews.models import Category, Genre, Title, User, Review
@@ -21,23 +22,37 @@ from .serializers import (
   ReviewCreateSerializer,
   ReviewSerializer)
 
+from .mixins import ListCreateDestroyViewSet
 
-class CategoryViewSet(viewsets.ModelViewSet):
-    '''Вьюсет для модели Категории. Читать может любой пользователь'''
+
+class CategoryViewSet(ListCreateDestroyViewSet):
+    '''Вьюсет для модели Категории.
+       Делать Get запрос может любой пользователь.
+       Редактировать или удалять только админ.
+    '''
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class GenreViewSet(viewsets.ModelViewSet):
-    '''Вьюсет для модели Жанры. Читать может любой пользователь'''
+class GenreViewSet(ListCreateDestroyViewSet):
+    '''Вьюсет для модели Жанры.
+       Делать Get запрос может любой пользователь.
+       Редактировать или удалять только админ.
+    '''
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    '''Вьюсет для Произведений. Читать может любой пользователь'''
+    '''Вьюсет для создания Произведений.
+       Делать Get запрос может любой пользователь.
+       Редактировать или удалять только админ.
+    '''
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+    # permission_classes = (IsAdminOrReadOnly, IsAuthenticatedOrReadOnly)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name', 'year',)
 
 
 class UserViewSet(viewsets.ModelViewSet):
