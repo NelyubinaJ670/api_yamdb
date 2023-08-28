@@ -27,12 +27,13 @@ class TitleSerializer(serializers.ModelSerializer):
         slug_field='slug',
         queryset=Category.objects.all()
     )
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'category', 'genre',
-            'description', 'year',
+            'description', 'year', 'rating',
         )
 
 
@@ -115,7 +116,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = (
-            'id', 'text', 'author', 'score', 'pub_date'
+            'id', 'text', 'author', 'score', 'pub_date', 
         )
         read_only = ('id',)
 
