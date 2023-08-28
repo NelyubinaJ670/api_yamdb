@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -32,6 +33,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (AdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
@@ -42,6 +44,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (AdminOrReadOnly,)
+    pagination_class = LimitOffsetPagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -54,6 +57,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         """Определяет какой сериализатор будет использоваться
