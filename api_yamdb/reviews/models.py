@@ -2,13 +2,11 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-
 from reviews.validators import validate_username
 
 MODERATOR = 'moderator'
 ADMIN = 'admin'
 USER = 'user'
-
 
 ROLES = [
     (MODERATOR, 'Модератор'),

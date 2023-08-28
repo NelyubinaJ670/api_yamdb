@@ -1,40 +1,70 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор объектов класса Category."""
     class Meta:
         model = Category
-        fields = ('id', 'name', 'slug')
+        exclude = ('id',)
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор объектов класса Genre."""
     class Meta:
         model = Genre
-        fields = ('id', 'name', 'slug')
+        exclude = ('id',)
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        many=True,
-        queryset=Genre.objects.all()
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all()
-    )
+class TitleGETSerializer(serializers.ModelSerializer):
+    """Сериализатор объектов класса Title при GET запросах."""
+
+    genre = GenreSerializer(many=True, read_only=True)
+    category = CategorySerializer(read_only=True)
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'category', 'genre',
-            'description', 'year', 'rating',
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
         )
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор объектов класса Title при небезопасных запросах."""
+
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category'
+        )
+
+    def to_representation(self, title):
+        """Определяет какой сериализатор будет применен."""
+        serializer = TitleGETSerializer(title)
+        return serializer.data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -116,7 +146,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = (
-            'id', 'text', 'author', 'score', 'pub_date', 
+            'id',
+            'text',
+            'author',
+            'score',
+            'pub_date',
         )
         read_only = ('id',)
 

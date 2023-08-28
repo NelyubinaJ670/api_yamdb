@@ -1,22 +1,27 @@
-from api.permissions import IsAdmin, IsAuthorModerAdminOrReadOnly, AdminOrReadOnly
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
+
+from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, GetTokenSerializer,
                           ReviewCreateSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleSerializer, UserSerializer)
+                          SignUpSerializer, TitleSerializer,
+                          UserSerializer, TitleGETSerializer)
+from .permissions import (IsAdmin,
+                          IsAuthorModerAdminOrReadOnly, AdminOrReadOnly)
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -48,7 +53,14 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    search_fields = ('name', 'year',)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        """Определяет какой сериализатор будет использоваться
+        для разных типов запроса."""
+        if self.request.method == 'GET':
+            return TitleGETSerializer
+        return TitleSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
