@@ -74,8 +74,7 @@ class Title(models.Model):
         max_length=200
     )
     year = models.IntegerField(
-        'Год выпуска',
-        # validators=Валдатор?! Посмотрим что скажут тесты
+        'Год выпуска'
     )
     description = models.TextField(
         'Описание',
