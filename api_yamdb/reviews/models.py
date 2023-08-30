@@ -1,8 +1,9 @@
+from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
-from django.db import models
-from reviews.validators import validate_username
+
+from .validators import validate_username
 
 MODERATOR = 'moderator'
 ADMIN = 'admin'
@@ -16,7 +17,7 @@ ROLES = [
 
 SLUG_VALIDATOR = RegexValidator(
     regex=r'^[-a-zA-Z0-9_]+$',
-    message='Поле содержит недопустимый символ'
+    message='Недопустимые символы: ^[-a-zA-Z0-9_]+$'
 )
 
 
