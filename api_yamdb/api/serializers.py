@@ -94,7 +94,7 @@ class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
-        validators=[validate_username]
+        validators=(validate_username,)
     )
     confirmation_code = serializers.CharField(required=True)
 
@@ -102,7 +102,7 @@ class GetTokenSerializer(serializers.Serializer):
 class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
-        validators=[validate_username]
+        validators=(validate_username,)
     )
     email = serializers.EmailField(
         max_length=254

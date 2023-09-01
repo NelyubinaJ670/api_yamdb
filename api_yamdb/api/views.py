@@ -13,6 +13,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
+from api_yamdb.settings import MESSAGE, DEFAULT_FROM_MAIL
+
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
@@ -118,18 +120,11 @@ def signup_user(request):
         raise serializers.ValidationError('Такой пользователь уже существует')
 
     confirmation_code = default_token_generator.make_token(user)
-    message = (
-        f'Ваш код подтвержения: {confirmation_code}\n'
-        'Перейдите по адресу '
-        'http://127.0.0.1:8000/api/v1/auth/token/ и введите код '
-        'вместе c вашим username'
-    )
-
     send_mail(
         'Регистрация завершена',
-        message,
-        'webmaster@localhost',
-        [email, ],
+        MESSAGE.format(confirmation_code),
+        DEFAULT_FROM_MAIL,
+        [email]
     )
     return Response(
         serializer.data,
