@@ -54,7 +54,6 @@ class TitleViewSet(viewsets.ModelViewSet):
        Делать Get запрос может любой пользователь.
        Редактировать или удалять только админ.
     '''
-    
     queryset = Title.objects.select_related(
         'category').prefetch_related(
             'genre').annotate(rating=Avg('reviews__score'))
@@ -172,7 +171,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(
             Title, id=self.kwargs.get('title_id')
         )
-        return title.reviews.all().select_related('author', 'title')
+        return title.reviews.select_related('author', 'title')
 
     def perform_create(self, serializer):
         title = get_object_or_404(
@@ -193,7 +192,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('review_id'),
             title_id=self.kwargs.get('title_id'),
         )
-        return review.comments.all().select_related('author')
+        return review.comments.select_related('author')
 
     def perform_create(self, serializer):
         review = get_object_or_404(

@@ -209,7 +209,7 @@ class Review(models.Model):
                 name='unique_author'
             )
         ]
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
 
