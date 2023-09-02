@@ -152,3 +152,11 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+DEFAULT_FROM_MAIL = 'webmaster@localhost'
+MESSAGE = (
+    'Ваш код подтвержения: {}'
+    'Перейдите по адресу '
+    'http://127.0.0.1:8000/api/v1/auth/token/ и введите код '
+    'вместе c вашим username'
+)

@@ -11,8 +11,10 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Review, Title, User
 
+from api_yamdb.settings import MESSAGE, DEFAULT_FROM_MAIL
+
+from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
@@ -52,8 +54,9 @@ class TitleViewSet(viewsets.ModelViewSet):
        Делать Get запрос может любой пользователь.
        Редактировать или удалять только админ.
     '''
-    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
-    serializer_class = TitleSerializer
+    queryset = Title.objects.select_related(
+        'category').prefetch_related(
+            'genre').annotate(rating=Avg('reviews__score'))
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
@@ -62,7 +65,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Определяет какой сериализатор будет использоваться
-        для разных типов запроса."""
+        при чтении или записи произведений."""
         if self.request.method == 'GET':
             return TitleGETSerializer
         return TitleSerializer
@@ -118,18 +121,11 @@ def signup_user(request):
         raise serializers.ValidationError('Такой пользователь уже существует')
 
     confirmation_code = default_token_generator.make_token(user)
-    message = (
-        f'Ваш код подтвержения: {confirmation_code}\n'
-        'Перейдите по адресу '
-        'http://127.0.0.1:8000/api/v1/auth/token/ и введите код '
-        'вместе c вашим username'
-    )
-
     send_mail(
         'Регистрация завершена',
-        message,
-        'webmaster@localhost',
-        [email, ],
+        MESSAGE.format(confirmation_code),
+        DEFAULT_FROM_MAIL,
+        [email]
     )
     return Response(
         serializer.data,
@@ -163,7 +159,6 @@ def get_token(request):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Отображение действий с отзывами"""
-    serializer_class = ReviewSerializer
     permission_classes = (IsAuthorModerAdminOrReadOnly,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
@@ -176,7 +171,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(
             Title, id=self.kwargs.get('title_id')
         )
-        return title.reviews.all()
+        return title.reviews.select_related('author', 'title')
 
     def perform_create(self, serializer):
         title = get_object_or_404(
@@ -197,7 +192,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('review_id'),
             title_id=self.kwargs.get('title_id'),
         )
-        return review.comments.all()
+        return review.comments.select_related('author')
 
     def perform_create(self, serializer):
         review = get_object_or_404(

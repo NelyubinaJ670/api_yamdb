@@ -1,5 +1,8 @@
+from django.utils import timezone
+
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import validate_username
 
@@ -20,22 +23,13 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class TitleGETSerializer(serializers.ModelSerializer):
     """Сериализатор объектов класса Title при GET запросах."""
-
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
     rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = '__all__'
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -60,11 +54,26 @@ class TitleSerializer(serializers.ModelSerializer):
             'genre',
             'category'
         )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Title.objects.all(),
+                fields=('name', 'year'),
+                message='Данное произведение уже существует'
+            )
+        ]
+
+    def validate_year(self, value):
+        """Валидатор для проверки даты произведения."""
+        current_year = timezone.now().year
+        if not 0 <= value <= current_year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего.'
+            )
+        return value
 
     def to_representation(self, title):
         """Определяет какой сериализатор будет применен."""
-        serializer = TitleGETSerializer(title)
-        return serializer.data
+        return TitleGETSerializer(title).data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -94,7 +103,7 @@ class GetTokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
-        validators=[validate_username]
+        validators=(validate_username,)
     )
     confirmation_code = serializers.CharField(required=True)
 
@@ -102,7 +111,7 @@ class GetTokenSerializer(serializers.Serializer):
 class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
-        validators=[validate_username]
+        validators=(validate_username,)
     )
     email = serializers.EmailField(
         max_length=254
