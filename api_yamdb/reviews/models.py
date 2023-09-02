@@ -1,22 +1,16 @@
+from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
+
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
 from reviews.validators import validate_username
-
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-USER = 'user'
-
-ROLES = [
-    (MODERATOR, 'Модератор'),
-    (ADMIN, 'Администратор'),
-    (USER, 'Пользователь')
-]
 
 SLUG_VALIDATOR = RegexValidator(
     regex=r'^[-a-zA-Z0-9_]+$',
-    message='Поле содержит недопустимый символ'
+    message='Недопустимые символы: ^[-a-zA-Z0-9_]+$'
 )
 
 
@@ -124,6 +118,11 @@ class TitleGenre(models.Model):
 
 class User(AbstractUser):
     '''Переопределяем модель User'''
+    class Roles(models.TextChoices):
+        MODERATOR = 'moderator', _('Модератор')
+        ADMIN = 'admin', _('Администратор')
+        USER = 'user', _('Пользователь')
+
     username = models.CharField(
         max_length=150,
         verbose_name='Пользователь',
@@ -157,8 +156,8 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=100,
         verbose_name='Роль',
-        choices=ROLES,
-        default='user'
+        choices=Roles.choices,
+        default=Roles.USER
     )
 
     class Meta:
@@ -168,12 +167,12 @@ class User(AbstractUser):
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == self.Roles.MODERATOR
 
     @property
     def is_admin(self):
         return (
-            self.role == ADMIN
+            self.role == self.Roles.ADMIN
             or self.is_superuser
         )
 
