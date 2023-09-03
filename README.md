@@ -58,7 +58,7 @@ python manage.py migrate
 ```
 Заполнить базу тестовыми данными (`*по требованию`):
 ```
-python manage.py load_CSV_file
+python manage.py load_cvs_file
 ```
 Запустить сервер:
 ```
