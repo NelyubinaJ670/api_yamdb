@@ -62,14 +62,14 @@ class TitleSerializer(serializers.ModelSerializer):
             )
         ]
 
-    def validate_year(self, value):
+    def validate_year(self, value_year):
         """Валидатор для проверки даты произведения."""
         current_year = timezone.now().year
-        if not 0 <= value <= current_year:
+        if not 0 <= value_year <= current_year:
             raise serializers.ValidationError(
                 'Год выпуска не может быть больше текущего.'
             )
-        return value
+        return value_year
 
     def to_representation(self, title):
         """Определяет какой сериализатор будет применен."""

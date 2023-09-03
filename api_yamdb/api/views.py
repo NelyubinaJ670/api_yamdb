@@ -1,30 +1,28 @@
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-
-from api_yamdb.settings import MESSAGE, DEFAULT_FROM_MAIL
 
 from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
+from .permissions import AdminOrReadOnly, IsAdmin, IsAuthorModerAdminOrReadOnly
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, GetTokenSerializer,
                           ReviewCreateSerializer, ReviewSerializer,
-                          SignUpSerializer, TitleSerializer,
-                          UserSerializer, TitleGETSerializer)
-from .permissions import (IsAdmin,
-                          IsAuthorModerAdminOrReadOnly, AdminOrReadOnly)
+                          SignUpSerializer, TitleGETSerializer,
+                          TitleSerializer, UserSerializer)
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -55,8 +53,7 @@ class TitleViewSet(viewsets.ModelViewSet):
        Редактировать или удалять только админ.
     '''
     queryset = Title.objects.select_related(
-        'category').prefetch_related(
-            'genre').annotate(rating=Avg('reviews__score'))
+        'category').annotate(rating=Avg('reviews__score'))
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
@@ -66,9 +63,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Определяет какой сериализатор будет использоваться
         при чтении или записи произведений."""
-        if self.request.method == 'GET':
-            return TitleGETSerializer
-        return TitleSerializer
+        return (TitleGETSerializer
+                if self.request.method == 'GET' else TitleSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -123,8 +119,11 @@ def signup_user(request):
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Регистрация завершена',
-        MESSAGE.format(confirmation_code),
-        DEFAULT_FROM_MAIL,
+        settings.MESSAGE.format(
+            confirmation_code,
+            settings.DEFAULT_URL_GET_TOKEN,
+        ),
+        settings.DEFAULT_FROM_MAIL,
         [email]
     )
     return Response(
@@ -163,9 +162,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
-        if self.action == 'create':
-            return ReviewCreateSerializer
-        return ReviewSerializer
+        return (ReviewCreateSerializer
+                if self.action == 'create' else ReviewSerializer)
 
     def get_queryset(self):
         title = get_object_or_404(
