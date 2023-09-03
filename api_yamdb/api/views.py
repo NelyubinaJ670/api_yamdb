@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title, User
-
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .pagination import UserPagination
@@ -64,9 +63,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Определяет какой сериализатор будет использоваться
         при чтении или записи произведений."""
-        if self.request.method == 'GET':
-            return TitleGETSerializer
-        return TitleSerializer
+        return (TitleGETSerializer
+                if self.request.method == 'GET' else TitleSerializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -164,9 +162,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
-        if self.action == 'create':
-            return ReviewCreateSerializer
-        return ReviewSerializer
+        return (ReviewCreateSerializer
+                if self.action == 'create' else ReviewSerializer)
 
     def get_queryset(self):
         title = get_object_or_404(
