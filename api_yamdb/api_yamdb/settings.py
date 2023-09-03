@@ -152,9 +152,10 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_FROM_MAIL = 'webmaster@localhost'
+DEFAULT_URL_GET_TOKEN = 'http://127.0.0.1:8000/api/v1/auth/token/'
 MESSAGE = (
     'Ваш код подтвержения: {}'
-    'Перейдите по адресу '
-    'http://127.0.0.1:8000/api/v1/auth/token/ и введите код '
+    'Перейдите по адресу {}'
+    'и введите код '
     'вместе c вашим username'
 )
