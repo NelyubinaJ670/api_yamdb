@@ -55,8 +55,7 @@ class TitleViewSet(viewsets.ModelViewSet):
        Редактировать или удалять только админ.
     '''
     queryset = Title.objects.select_related(
-        'category').prefetch_related(
-            'genre').annotate(rating=Avg('reviews__score'))
+        'category').annotate(rating=Avg('reviews__score'))
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
